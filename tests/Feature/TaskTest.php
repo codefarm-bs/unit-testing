@@ -15,7 +15,7 @@ class TaskTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
-        $response = $this->post('tasks', [
+        $response = $this->post('api/tasks', [
             'title' => 'sample title',
             'description' => 'something'
         ]);
@@ -26,7 +26,7 @@ class TaskTest extends TestCase
     /** @test */
     public function new_task_request_validation()
     {
-        $response = $this->post('tasks', [
+        $response = $this->post('api/tasks', [
             'title' => '',
             'description' => ''
         ]);
@@ -39,12 +39,12 @@ class TaskTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
-        $this->post('tasks', [
+        $this->post('api/tasks', [
             'title' => 'sample title',
             'description' => 'something'
         ]);
 
-        $this->patch('tasks/' . Task::first()->id, [
+        $this->patch('api/tasks/' . Task::first()->id, [
             'title' => 'new title',
             'description' => 'new description'
         ]);
@@ -52,5 +52,18 @@ class TaskTest extends TestCase
         $this->assertEquals('new title', Task::first()->title);
         $this->assertEquals('new description', Task::first()->description);
 
+    }
+
+    /** @test */
+    public function delete_a_task()
+    {
+        $this->post('api/tasks', [
+            'title' => 'sample title',
+            'description' => 'something'
+        ]);
+
+        $this->delete('api/tasks/' . Task::first()->id);
+
+        $this->assertCount(0, Task::all());
     }
 }

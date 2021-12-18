@@ -17,6 +17,11 @@ class TaskController extends Controller
         $task->update($this->getValidate());
     }
 
+    public function destroy(Task $task)
+    {
+        $task->delete();
+    }
+
     /**
      * @return array
      */
