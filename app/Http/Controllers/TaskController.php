@@ -2,34 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Task;
-use Illuminate\Http\Request;
+use App\Http\Requests\TaskRequest;
+use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
 {
-    public function store()
+    public function index()
     {
-        Task::create($this->getValidate());
+        return $this->success(Auth::user()->tasks);
     }
 
-    public function update(Task $task)
+    public function show($task_id)
     {
-        $task->update($this->getValidate());
+        return $this->success(Auth::user()->tasks()->where('id', $task_id)->firstOrFail());
     }
 
-    public function destroy(Task $task)
+    public function store(TaskRequest $request)
     {
-        $task->delete();
+        Auth::user()->tasks()->create($request->validated());
+
+        return $this->success('', 'Your task created successfully');
     }
 
-    /**
-     * @return array
-     */
-    public function getValidate(): array
+    public function update(TaskRequest $request, $task_id)
     {
-        return request()->validate([
-            'title' => 'required',
-            'description' => 'sometimes'
-        ]);
+        Auth::user()->tasks()->where('id', $task_id)->firstOrFail()->update($request->validated());
+
+        return $this->success('', 'Your task updated successfully');
+    }
+
+    public function destroy($task_id)
+    {
+        Auth::user()->tasks()->where('id', $task_id)->firstOrFail()->delete();
+
+        return $this->success('', 'Your task deleted successfully');
     }
 }
