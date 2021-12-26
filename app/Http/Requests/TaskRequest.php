@@ -25,7 +25,8 @@ class TaskRequest extends FormRequest
     {
         return [
             'title' => 'required',
-            'description' => 'sometimes'
+            'description' => 'sometimes',
+            'ended_at' => 'sometimes|date|after:now'
         ];
     }
 }

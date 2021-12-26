@@ -11,8 +11,10 @@ class Task extends Model
 
     protected $guarded = [];
 
-public function user()
-{
-    return $this->belongsTo(User::class);
-}
+    protected $dates = ['ended_at'];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

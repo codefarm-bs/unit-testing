@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Task;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -123,5 +124,146 @@ class TaskTest extends TestCase
         $response = $this->get('api/tasks');
 
         $response->assertOk();
+    }
+
+    /** @test */
+    public function new_task_with_deadline()
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->post('api/tasks', [
+            'title' => 'some title',
+            'description' => 'some description',
+            'ended_at' => now()->addDays(5)
+        ]);
+
+        $response->assertOk();
+
+        $task = $user->tasks->first();
+
+        $this->assertNotNull($task->ended_at);
+    }
+
+    /** @test */
+    public function new_task_with_wrong_deadline()
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->post('api/tasks', [
+            'title' => 'some title',
+            'description' => 'some description',
+            'ended_at' => 'wrong date format'
+        ]);
+
+//        dd($user->tasks->first());
+
+        $response->assertSessionHasErrors('ended_at');
+    }
+
+    /** @test */
+    public function new_task_with_wrong_past_deadline()
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->post('api/tasks', [
+            'title' => 'some title',
+            'description' => 'some description',
+            'ended_at' => now()->subDays(3)
+        ]);
+
+        $response->assertSessionHasErrors('ended_at');
+    }
+
+    /** @test */
+    public function new_task_with_deadline_has_right_format()
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $response = $this->post('api/tasks', [
+            'title' => 'some title',
+            'description' => 'some description',
+            'ended_at' => now()->addDays(5)
+        ]);
+
+        $response->assertOk();
+
+        $task = $user->tasks->first();
+
+//        dd($task->ended_at . ' is a ' . gettype($task->ended_at));
+
+        $this->assertInstanceOf(Carbon::class, $task->ended_at);
+    }
+
+    /** @test */
+    public function update_task_with_deadline()
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $this->post('api/tasks', [
+            'title' => 'some title',
+            'description' => 'some description',
+        ]);
+        $this->patch('api/tasks/' . Task::first()->id, [
+            'title' => 'new title',
+            'description' => 'new description',
+            'ended_at' => now()->addDays(5)
+        ]);
+
+        $task = $user->tasks->first();
+
+        $this->assertEquals('new title', $task->title);
+        $this->assertEquals('new description', $task->description);
+        $this->assertNotNull($task->ended_at);
+
+    }
+
+    /** @test */
+    public function update_task_with_wrong_deadline()
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $this->post('api/tasks', [
+            'title' => 'some title',
+            'description' => 'some description',
+        ]);
+        $response = $this->patch('api/tasks/' . Task::first()->id, [
+            'title' => 'new title',
+            'description' => 'new description',
+            'ended_at' => 'wrong date format'
+        ]);
+
+        $response->assertSessionHasErrors('ended_at');
+    }
+
+    /** @test */
+    public function update_task_with_wrong_past_deadline()
+    {
+        $user = User::factory()->create();
+
+        Sanctum::actingAs($user);
+
+        $this->post('api/tasks', [
+            'title' => 'some title',
+            'description' => 'some description',
+        ]);
+        $response = $this->patch('api/tasks/' . Task::first()->id, [
+            'title' => 'new title',
+            'description' => 'new description',
+            'ended_at' => now()->subDays(3)
+        ]);
+
+        $response->assertSessionHasErrors('ended_at');
     }
 }
